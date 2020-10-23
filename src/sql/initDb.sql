@@ -128,25 +128,6 @@ CREATE TABLE IF NOT EXISTS df.profile
     content ipfs_cid NULL    
 );
 
-CREATE TABLE IF NOT EXISTS df.news_feed
-(
-    account varchar(48) NOT NULL,
-    activity_id bigint NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS df.notifications
-(
-    account varchar(48) NOT NULL,
-    activity_id bigint NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS df.notifications_counter
-(
-    account varchar(48) NOT NULL UNIQUE,
-    last_read_activity_id bigint DEFAULT NULL,
-    unread_count bigint NOT NULL DEFAULT 0
-);
-
 CREATE TABLE IF NOT EXISTS df.activities
 (
     id bigserial not null primary key UNIQUE,
@@ -161,6 +142,27 @@ CREATE TABLE IF NOT EXISTS df.activities
     block_number bigint NOT NULL,
     aggregated boolean NOT NULL DEFAULT true,
     agg_count bigint NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS df.news_feed
+(
+    account varchar(48) NOT NULL,
+    activity_id bigint NOT NULL,
+    FOREIGN KEY (activity_id) REFERENCES df.activities(id)
+);
+
+CREATE TABLE IF NOT EXISTS df.notifications
+(
+    account varchar(48) NOT NULL,
+    activity_id bigint NOT NULL,
+    FOREIGN KEY (activity_id) REFERENCES df.activities(id)
+);
+
+CREATE TABLE IF NOT EXISTS df.notifications_counter
+(
+    account varchar(48) NOT NULL UNIQUE,
+    last_read_activity_id bigint DEFAULT NULL,
+    unread_count bigint NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS df.account_followers

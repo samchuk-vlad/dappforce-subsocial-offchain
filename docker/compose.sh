@@ -8,7 +8,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 eval cd $DIR
 
 UTILS_ONLY=false
-UTILS=" postgres elasticsearch ipfs-cluster ipfs-peer pgadmin"
+UTILS=" postgres elasticsearch ipfs-cluster pgadmin graphql-engine"
+# UTILS=" postgres pgadmin graphql-engine"
 
 # Generated new IPFS Cluster secret in case the 'ipfs-data' directory was deleted
 export CLUSTER_SECRET=$(od  -vN 32 -An -tx1 /dev/urandom | tr -d ' \n')
@@ -53,31 +54,33 @@ time (
     docker-compose up -d $UTILS
   else
     docker-compose up -d
-    eval docker stop subsocial-offchain &> /dev/null
 
-    printf "\nStarting Elasticsearch...\n"
-    until curl -s $ES_NODE_URL > /dev/null; do
-      sleep 2
-    done
-    docker-compose up -d offchain
+    if [[ $UTILS =~ 'elasticsearch' ]]; then
+      eval docker stop subsocial-offchain &> /dev/null
+      
+      printf "\nStarting Elasticsearch...\n"
+      until curl -s $ES_NODE_URL > /dev/null; do
+        sleep 2
+      done
+      docker-compose up -d offchain
+    fi
   fi
 
-  printf "\nWaiting until IPFS is ready...\n"
-  until curl -s --X GET ${IPFS_NODE_URL}'/api/v0/version' > /dev/null
-  do
-    sleep 1
-  done
-  for node in 0 1
-  do
-    docker exec subsocial-ipfs$node \
+  if [[ $UTILS =~ 'ipfs' ]]; then
+    printf "\nWaiting until IPFS is ready...\n"
+    until curl -s --X GET ${IPFS_NODE_URL}'/api/v0/version' > /dev/null
+    do
+      sleep 1
+    done
+    docker exec subsocial-ipfs-node \
       ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
-    docker exec subsocial-ipfs$node \
+    docker exec subsocial-ipfs-node \
       ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET"]'
-    docker exec subsocial-ipfs$node ipfs bootstrap rm --all &> /dev/null
+    docker exec subsocial-ipfs-node ipfs bootstrap rm --all &> /dev/null
 
     printf "Restarting "
-    docker restart subsocial-ipfs$node
-  done
+    docker restart subsocial-ipfs-node
+  fi
 
   # TODO: Add initial peer as the only one trusted
 )
