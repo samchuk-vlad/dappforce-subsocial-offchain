@@ -5,6 +5,7 @@ export type FaucetFormData = {
   email: string,
   token: string,
   periodicity?: Periodicity,
+  ref?: string
 }
 
 export type TokenDropsColumns = {
@@ -21,5 +22,6 @@ export type TokenDropsColumns = {
 
 export type BaseConfirmData = {
   account: string,
-  confirmationCode: string
+  confirmationCode: string,
+  ref?: string
 }
